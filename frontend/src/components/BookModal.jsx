@@ -7,18 +7,27 @@ const PLACEHOLDER =
 
 function conditionColor(cond) {
   const map = {
-    Mint: { bg: '#e8f5e9', text: '#2e7d32' },
+    Mint:        { bg: '#e8f5e9', text: '#2e7d32' },
     'Very Good': { bg: '#e3f2fd', text: '#1565c0' },
-    Good: { bg: '#fff8e1', text: '#f57f17' },
-    Fair: { bg: '#fff3e0', text: '#e65100' },
-    Poor: { bg: '#fce4ec', text: '#b71c1c' },
+    Good:        { bg: '#fff8e1', text: '#f57f17' },
+    Fair:        { bg: '#fff3e0', text: '#e65100' },
+    Poor:        { bg: '#fce4ec', text: '#b71c1c' },
   }
   return map[cond] || { bg: '#f5f5f5', text: '#616161' }
 }
 
 export default function BookModal({ book, onClose }) {
-  const [images, setImages] = useState([])
+  const [images, setImages]     = useState([])
   const [activeIdx, setActiveIdx] = useState(0)
+  const [mobile, setMobile]     = useState(() => window.innerWidth < 768)
+
+  // Responsive breakpoint listener
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    const handler = (e) => setMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   useEffect(() => {
     if (!book) return
@@ -38,7 +47,7 @@ export default function BookModal({ book, onClose }) {
   useEffect(() => {
     function onKey(e) {
       if (e.key === 'Escape') onClose()
-      if (e.key === 'ArrowLeft' && images.length > 1) prev()
+      if (e.key === 'ArrowLeft'  && images.length > 1) prev()
       if (e.key === 'ArrowRight' && images.length > 1) next()
     }
     document.addEventListener('keydown', onKey)
@@ -53,38 +62,52 @@ export default function BookModal({ book, onClose }) {
 
   const cc = book.condition ? conditionColor(book.condition) : null
   const activeImage = images[activeIdx]
-  const displayUrl = activeImage?.url || book.cover_image_url || PLACEHOLDER
+  const displayUrl  = activeImage?.url || book.cover_image_url || PLACEHOLDER
 
   return (
     <div
       style={{
         position: 'fixed', inset: 0, zIndex: 200,
-        background: 'rgba(10,5,0,0.82)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '1.5rem',
+        background: 'rgba(10,5,0,0.88)',
+        display: 'flex',
+        alignItems: mobile ? 'flex-start' : 'center',
+        justifyContent: 'center',
+        padding: mobile ? 0 : '1.5rem',
+        overflowY: mobile ? 'auto' : 'hidden',
       }}
       onClick={onClose}
     >
       <div
         style={{
           background: '#faf6f0',
-          borderRadius: '4px',
-          maxWidth: '1200px', width: '100%',
-          maxHeight: '92vh', overflow: 'auto',
+          borderRadius: mobile ? 0 : '4px',
+          maxWidth: mobile ? '100%' : '1200px',
+          width: '100%',
+          minHeight: mobile ? '100dvh' : undefined,
+          maxHeight: mobile ? undefined : '92vh',
+          overflow: mobile ? 'visible' : 'auto',
           boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
-          display: 'flex', flexDirection: 'row',
-          border: '1px solid #c9b99a',
+          display: 'flex',
+          flexDirection: mobile ? 'column' : 'row',
+          border: mobile ? 'none' : '1px solid #c9b99a',
           position: 'relative',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button */}
+        {/* Close button — floats over image on mobile */}
         <button
           onClick={onClose}
           style={{
-            position: 'absolute', top: '1rem', right: '1rem',
-            background: 'none', border: 'none', cursor: 'pointer',
-            fontSize: '1.4rem', color: '#7a5c3a', lineHeight: 1, zIndex: 10,
+            position: 'absolute', top: '0.75rem', right: '0.75rem',
+            background: mobile ? 'rgba(0,0,0,0.55)' : 'none',
+            border: 'none', cursor: 'pointer',
+            fontSize: mobile ? '1.6rem' : '1.4rem',
+            color: mobile ? '#d4af37' : '#7a5c3a',
+            lineHeight: 1, zIndex: 20,
+            width: mobile ? '36px' : 'auto',
+            height: mobile ? '36px' : 'auto',
+            borderRadius: mobile ? '50%' : 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
           aria-label="Close"
         >
@@ -92,19 +115,25 @@ export default function BookModal({ book, onClose }) {
         </button>
 
         {/* ── Image panel ── */}
-        <div style={{ flexShrink: 0, width: '460px', background: '#1a0a00', display: 'flex', flexDirection: 'column' }}>
+        <div style={{
+          flexShrink: 0,
+          width: mobile ? '100%' : '460px',
+          height: mobile ? '300px' : 'auto',
+          background: '#1a0a00',
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
           {/* Main image */}
-          <div style={{ position: 'relative', flexGrow: 1, minHeight: '520px' }}>
+          <div style={{ position: 'relative', flexGrow: 1, minHeight: mobile ? 'unset' : '520px' }}>
             <img
               src={displayUrl}
               alt={activeImage?.caption || book.title}
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
 
-            {/* Prev / Next arrows */}
             {images.length > 1 && (
               <>
-                <button onClick={prev} style={arrowBtn('left')} aria-label="Previous image">‹</button>
+                <button onClick={prev} style={arrowBtn('left')}  aria-label="Previous image">‹</button>
                 <button onClick={next} style={arrowBtn('right')} aria-label="Next image">›</button>
                 <div style={{
                   position: 'absolute', bottom: '6px', left: '50%', transform: 'translateX(-50%)',
@@ -129,7 +158,9 @@ export default function BookModal({ book, onClose }) {
                   key={img.id}
                   onClick={() => setActiveIdx(idx)}
                   style={{
-                    flexShrink: 0, width: '44px', height: '58px',
+                    flexShrink: 0,
+                    width: mobile ? '52px' : '44px',
+                    height: mobile ? '68px' : '58px',
                     padding: 0,
                     border: `2px solid ${idx === activeIdx ? '#d4af37' : 'transparent'}`,
                     borderRadius: '2px', cursor: 'pointer', overflow: 'hidden',
@@ -142,7 +173,6 @@ export default function BookModal({ book, onClose }) {
             </div>
           )}
 
-          {/* Caption */}
           {activeImage?.caption && (
             <div style={{
               padding: '0.4rem 0.6rem', background: '#120700',
@@ -155,15 +185,21 @@ export default function BookModal({ book, onClose }) {
         </div>
 
         {/* ── Details panel ── */}
-        <div style={{ padding: '2rem 2.5rem', flexGrow: 1, overflowY: 'auto' }}>
-          <div style={{ color: '#8b6914', fontSize: '1.1rem', letterSpacing: '0.4em', marginBottom: '0.5rem' }}>
+        <div style={{
+          padding: mobile ? '1.5rem 1.25rem 2rem' : '2rem 2.5rem',
+          flexGrow: 1,
+          overflowY: mobile ? 'visible' : 'auto',
+        }}>
+          <div style={{ color: '#8b6914', fontSize: '1rem', letterSpacing: '0.4em', marginBottom: '0.5rem' }}>
             ✦ ✦ ✦
           </div>
 
           <h2 style={{
             fontFamily: "'Playfair Display', serif",
-            fontSize: '1.75rem', fontWeight: 700,
-            color: '#1a0a00', marginBottom: '0.25rem', lineHeight: 1.2,
+            fontSize: mobile ? '1.4rem' : '1.75rem',
+            fontWeight: 700, color: '#1a0a00',
+            marginBottom: '0.25rem', lineHeight: 1.2,
+            paddingRight: '2rem', // avoid overlap with close btn on desktop
           }}>
             {book.title}
           </h2>
@@ -178,14 +214,17 @@ export default function BookModal({ book, onClose }) {
 
           <div style={{ height: '1px', background: 'linear-gradient(to right, #d4af37, transparent)', marginBottom: '1.25rem' }} />
 
+          {/* Metadata grid — single column on mobile */}
           <div style={{
-            display: 'grid', gridTemplateColumns: '1fr 1fr',
-            gap: '0.6rem 1.5rem', marginBottom: '1.5rem',
+            display: 'grid',
+            gridTemplateColumns: mobile ? '1fr' : '1fr 1fr',
+            gap: mobile ? '0.75rem' : '0.6rem 1.5rem',
+            marginBottom: '1.5rem',
             fontFamily: "'Lato', sans-serif",
           }}>
             {book.year_published && <MetaRow label="Year Published" value={book.year_published} />}
-            {book.edition && <MetaRow label="Edition" value={book.edition} />}
-            {book.publisher && <MetaRow label="Publisher" value={book.publisher} />}
+            {book.edition        && <MetaRow label="Edition"        value={book.edition} />}
+            {book.publisher      && <MetaRow label="Publisher"      value={book.publisher} />}
             {book.condition && (
               <div>
                 <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9a7a5a', marginBottom: '0.2rem' }}>Condition</div>
@@ -244,8 +283,8 @@ function arrowBtn(side) {
     transform: 'translateY(-50%)',
     background: 'rgba(0,0,0,0.45)',
     border: 'none', color: '#d4af37',
-    fontSize: '1.6rem', lineHeight: 1,
-    width: '32px', height: '32px',
+    fontSize: '1.8rem', lineHeight: 1,
+    width: '36px', height: '36px',
     borderRadius: '2px', cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     zIndex: 5,
