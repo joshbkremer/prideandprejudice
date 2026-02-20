@@ -17,11 +17,10 @@ function conditionColor(cond) {
 }
 
 export default function BookModal({ book, onClose, isAdmin }) {
-  const [images, setImages]     = useState([])
+  const [images, setImages]       = useState([])
   const [activeIdx, setActiveIdx] = useState(0)
-  const [mobile, setMobile]     = useState(() => window.innerWidth < 768)
+  const [mobile, setMobile]       = useState(() => window.innerWidth < 768)
 
-  // Responsive breakpoint listener
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)')
     const handler = (e) => setMobile(e.matches)
@@ -60,181 +59,123 @@ export default function BookModal({ book, onClose, isAdmin }) {
 
   if (!book) return null
 
-  const cc = book.condition ? conditionColor(book.condition) : null
+  const cc          = book.condition ? conditionColor(book.condition) : null
   const activeImage = images[activeIdx]
   const displayUrl  = activeImage?.url || book.cover_image_url || PLACEHOLDER
 
-  return (
-    <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 200,
-        background: 'rgba(10,5,0,0.88)',
-        display: 'flex',
-        alignItems: mobile ? 'flex-start' : 'center',
-        justifyContent: 'center',
-        padding: mobile ? 0 : '1.5rem',
-        overflowY: mobile ? 'auto' : 'hidden',
-      }}
-      onClick={onClose}
-    >
+  // ── MOBILE ──────────────────────────────────────────────────────────────
+  // Block layout (NOT flex) so the image div and text div simply stack top-to-bottom.
+  // overflow-y:scroll on the fixed container scrolls their combined natural height.
+  // flex-grow on a child would cap the details div to the remaining viewport height,
+  // making the scroll container think there's nothing to scroll — that was the bug.
+  if (mobile) return (
+    <>
+      {/* Dim backdrop */}
       <div
-        style={{
-          background: '#faf6f0',
-          borderRadius: mobile ? 0 : '4px',
-          maxWidth: mobile ? '100%' : '1200px',
-          width: '100%',
-          minHeight: mobile ? '100dvh' : undefined,
-          maxHeight: mobile ? undefined : '92vh',
-          overflow: mobile ? 'visible' : 'auto',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
-          display: 'flex',
-          flexDirection: mobile ? 'column' : 'row',
-          border: mobile ? 'none' : '1px solid #c9b99a',
-          position: 'relative',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close button — floats over image on mobile */}
-        <button
-          onClick={onClose}
-          style={{
-            position: 'absolute', top: '0.75rem', right: '0.75rem',
-            background: mobile ? 'rgba(0,0,0,0.55)' : 'none',
-            border: 'none', cursor: 'pointer',
-            fontSize: mobile ? '1.6rem' : '1.4rem',
-            color: mobile ? '#d4af37' : '#7a5c3a',
-            lineHeight: 1, zIndex: 20,
-            width: mobile ? '36px' : 'auto',
-            height: mobile ? '36px' : 'auto',
-            borderRadius: mobile ? '50%' : 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
-          aria-label="Close"
-        >
-          ×
-        </button>
+        style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(10,5,0,0.88)' }}
+        onClick={onClose}
+      />
 
-        {/* ── Image panel ── */}
-        <div style={{
-          flexShrink: 0,
-          width: mobile ? '100%' : '460px',
-          height: mobile ? '300px' : 'auto',
-          background: '#1a0a00',
-          display: 'flex',
-          flexDirection: 'column',
-        }}>
-          {/* Main image */}
-          <div style={{ position: 'relative', flexGrow: 1, minHeight: mobile ? 'unset' : '520px' }}>
-            <img
-              src={displayUrl}
-              alt={activeImage?.caption || book.title}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-            />
+      {/* Scrollable sheet — block layout, NOT flex */}
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 201,
+        background: '#faf6f0',
+        overflowY: 'scroll',
+        WebkitOverflowScrolling: 'touch',
+        // display is default 'block' — do NOT set display:flex here
+      }}>
 
-            {images.length > 1 && (
-              <>
-                <button onClick={prev} style={arrowBtn('left')}  aria-label="Previous image">‹</button>
-                <button onClick={next} style={arrowBtn('right')} aria-label="Next image">›</button>
-                <div style={{
-                  position: 'absolute', bottom: '6px', left: '50%', transform: 'translateX(-50%)',
-                  background: 'rgba(0,0,0,0.55)', color: '#d4af37',
-                  fontFamily: "'Lato', sans-serif", fontSize: '0.7rem',
-                  padding: '0.15rem 0.5rem', borderRadius: '10px', letterSpacing: '0.08em',
-                }}>
-                  {activeIdx + 1} / {images.length}
-                </div>
-              </>
-            )}
-          </div>
+        {/* ── Image block ── */}
+        {/* Height is set directly on <img> — no nested flex/height:100% chains
+            that Chrome Android can misresolve against the fixed viewport height */}
+        <div style={{ position: 'relative', background: '#1a0a00', lineHeight: 0 }}>
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            style={{
+              position: 'absolute', top: '0.75rem', right: '0.75rem',
+              background: 'rgba(0,0,0,0.55)', border: 'none', cursor: 'pointer',
+              fontSize: '1.6rem', color: '#d4af37', lineHeight: 1,
+              width: '36px', height: '36px', borderRadius: '50%', zIndex: 10,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+            aria-label="Close"
+          >×</button>
 
-          {/* Thumbnail strip */}
+          {/* Main image — explicit pixel height directly on the element */}
+          <img
+            src={displayUrl}
+            alt={activeImage?.caption || book.title}
+            style={{ width: '100%', height: '260px', objectFit: 'cover', display: 'block' }}
+          />
+
+          {/* Arrow buttons */}
           {images.length > 1 && (
-            <div style={{
-              display: 'flex', gap: '4px', padding: '6px',
-              overflowX: 'auto', background: '#120700', flexShrink: 0,
-            }}>
-              {images.map((img, idx) => (
-                <button
-                  key={img.id}
-                  onClick={() => setActiveIdx(idx)}
-                  style={{
-                    flexShrink: 0,
-                    width: mobile ? '52px' : '44px',
-                    height: mobile ? '68px' : '58px',
-                    padding: 0,
-                    border: `2px solid ${idx === activeIdx ? '#d4af37' : 'transparent'}`,
-                    borderRadius: '2px', cursor: 'pointer', overflow: 'hidden',
-                    background: '#2d1a0e',
-                  }}
-                >
-                  <img src={img.url} alt={img.caption || ''} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                </button>
-              ))}
-            </div>
-          )}
-
-          {activeImage?.caption && (
-            <div style={{
-              padding: '0.4rem 0.6rem', background: '#120700',
-              fontFamily: "'Lato', sans-serif", fontSize: '0.75rem',
-              color: '#9a7a5a', fontStyle: 'italic', flexShrink: 0,
-            }}>
-              {activeImage.caption}
-            </div>
+            <>
+              <button onClick={prev} style={{ ...arrowBtn('left'),  top: '130px' }} aria-label="Previous image">‹</button>
+              <button onClick={next} style={{ ...arrowBtn('right'), top: '130px' }} aria-label="Next image">›</button>
+              <div style={{
+                position: 'absolute', bottom: '6px', left: '50%', transform: 'translateX(-50%)',
+                background: 'rgba(0,0,0,0.55)', color: '#d4af37',
+                fontFamily: "'Lato', sans-serif", fontSize: '0.7rem',
+                padding: '0.15rem 0.5rem', borderRadius: '10px', letterSpacing: '0.08em',
+              }}>
+                {activeIdx + 1} / {images.length}
+              </div>
+            </>
           )}
         </div>
 
-        {/* ── Details panel ── */}
-        <div style={{
-          padding: mobile ? '1.5rem 1.25rem 2rem' : '2rem 2.5rem',
-          flexGrow: 1,
-          overflowY: mobile ? 'visible' : 'auto',
-        }}>
-          <div style={{ color: '#8b6914', fontSize: '1rem', letterSpacing: '0.4em', marginBottom: '0.5rem' }}>
-            ✦ ✦ ✦
+        {/* Thumbnail strip */}
+        {images.length > 1 && (
+          <div style={{ display: 'flex', gap: '4px', padding: '6px', overflowX: 'auto', background: '#120700' }}>
+            {images.map((img, idx) => (
+              <button
+                key={img.id}
+                onClick={() => setActiveIdx(idx)}
+                style={{
+                  flexShrink: 0, width: '52px', height: '68px', padding: 0,
+                  border: `2px solid ${idx === activeIdx ? '#d4af37' : 'transparent'}`,
+                  borderRadius: '2px', cursor: 'pointer', overflow: 'hidden', background: '#2d1a0e',
+                }}
+              >
+                <img src={img.url} alt={img.caption || ''} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              </button>
+            ))}
           </div>
+        )}
 
-          <h2 style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: mobile ? '1.4rem' : '1.75rem',
-            fontWeight: 700, color: '#1a0a00',
-            marginBottom: '0.25rem', lineHeight: 1.2,
-            paddingRight: '2rem', // avoid overlap with close btn on desktop
-          }}>
+        {activeImage?.caption && (
+          <div style={{ padding: '0.4rem 0.6rem', background: '#120700', fontFamily: "'Lato', sans-serif", fontSize: '0.75rem', color: '#9a7a5a', fontStyle: 'italic', lineHeight: 1.4 }}>
+            {activeImage.caption}
+          </div>
+        )}
+
+        {/* ── Text block (natural height — renders below image, no flex constraints) ── */}
+        <div style={{
+          padding: '1.5rem 1.25rem 3rem',
+          wordBreak: 'break-word',
+          overflowWrap: 'break-word',
+        }}>
+          <div style={{ color: '#8b6914', fontSize: '1rem', letterSpacing: '0.4em', marginBottom: '0.5rem' }}>✦ ✦ ✦</div>
+
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.4rem', fontWeight: 700, color: '#1a0a00', marginBottom: '0.25rem', lineHeight: 1.2 }}>
             {book.title}
           </h2>
-
-          <p style={{
-            fontFamily: "'Playfair Display', serif",
-            fontStyle: 'italic', color: '#5a3e28',
-            fontSize: '1rem', marginBottom: '1.25rem',
-          }}>
+          <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', color: '#5a3e28', fontSize: '1rem', marginBottom: '1.25rem' }}>
             {book.author}
           </p>
 
           <div style={{ height: '1px', background: 'linear-gradient(to right, #d4af37, transparent)', marginBottom: '1.25rem' }} />
 
-          {/* Metadata grid — single column on mobile */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: mobile ? '1fr' : '1fr 1fr',
-            gap: mobile ? '0.75rem' : '0.6rem 1.5rem',
-            marginBottom: '1.5rem',
-            fontFamily: "'Lato', sans-serif",
-          }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.75rem', marginBottom: '1.5rem', fontFamily: "'Lato', sans-serif" }}>
             {book.year_published && <MetaRow label="Year Published" value={book.year_published} />}
             {book.edition        && <MetaRow label="Edition"        value={book.edition} />}
             {book.publisher      && <MetaRow label="Publisher"      value={book.publisher} />}
             {book.condition && (
               <div>
                 <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9a7a5a', marginBottom: '0.2rem' }}>Condition</div>
-                <span style={{
-                  display: 'inline-block', padding: '0.2rem 0.6rem',
-                  borderRadius: '2px', fontSize: '0.8rem',
-                  background: cc.bg, color: cc.text, fontWeight: 700,
-                }}>
-                  {book.condition}
-                </span>
+                <span style={{ display: 'inline-block', padding: '0.2rem 0.6rem', borderRadius: '2px', fontSize: '0.8rem', background: cc.bg, color: cc.text, fontWeight: 700 }}>{book.condition}</span>
               </div>
             )}
             {isAdmin && book.acquisition_date && (
@@ -261,9 +202,117 @@ export default function BookModal({ book, onClose, isAdmin }) {
             </>
           )}
 
-          <div style={{ color: '#8b6914', fontSize: '0.9rem', letterSpacing: '0.4em', marginTop: '2rem', textAlign: 'center' }}>
-            ✦ ✦ ✦
+          <div style={{ color: '#8b6914', fontSize: '0.9rem', letterSpacing: '0.4em', marginTop: '2rem', textAlign: 'center' }}>✦ ✦ ✦</div>
+        </div>
+      </div>
+    </>
+  )
+
+  // ── DESKTOP ──────────────────────────────────────────────────────────────
+  return (
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'rgba(10,5,0,0.88)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '1.5rem', overflowY: 'hidden',
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          background: '#faf6f0', borderRadius: '4px',
+          maxWidth: '1200px', width: '100%',
+          maxHeight: '92vh', overflowY: 'auto',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+          display: 'flex', flexDirection: 'row',
+          border: '1px solid #c9b99a', position: 'relative',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute', top: '0.75rem', right: '0.75rem',
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontSize: '1.4rem', color: '#7a5c3a', lineHeight: 1, zIndex: 20,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+          aria-label="Close"
+        >×</button>
+
+        {/* Image panel */}
+        <div style={{ flexShrink: 0, width: '460px', background: '#1a0a00', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ position: 'relative', flexGrow: 1, minHeight: '520px' }}>
+            <img src={displayUrl} alt={activeImage?.caption || book.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            {images.length > 1 && (
+              <>
+                <button onClick={prev} style={arrowBtn('left')}  aria-label="Previous image">‹</button>
+                <button onClick={next} style={arrowBtn('right')} aria-label="Next image">›</button>
+                <div style={{ position: 'absolute', bottom: '6px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.55)', color: '#d4af37', fontFamily: "'Lato', sans-serif", fontSize: '0.7rem', padding: '0.15rem 0.5rem', borderRadius: '10px', letterSpacing: '0.08em' }}>
+                  {activeIdx + 1} / {images.length}
+                </div>
+              </>
+            )}
           </div>
+          {images.length > 1 && (
+            <div style={{ display: 'flex', gap: '4px', padding: '6px', overflowX: 'auto', background: '#120700', flexShrink: 0 }}>
+              {images.map((img, idx) => (
+                <button key={img.id} onClick={() => setActiveIdx(idx)} style={{ flexShrink: 0, width: '44px', height: '58px', padding: 0, border: `2px solid ${idx === activeIdx ? '#d4af37' : 'transparent'}`, borderRadius: '2px', cursor: 'pointer', overflow: 'hidden', background: '#2d1a0e' }}>
+                  <img src={img.url} alt={img.caption || ''} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                </button>
+              ))}
+            </div>
+          )}
+          {activeImage?.caption && (
+            <div style={{ padding: '0.4rem 0.6rem', background: '#120700', fontFamily: "'Lato', sans-serif", fontSize: '0.75rem', color: '#9a7a5a', fontStyle: 'italic', flexShrink: 0 }}>
+              {activeImage.caption}
+            </div>
+          )}
+        </div>
+
+        {/* Details panel */}
+        <div style={{ padding: '2rem 2.5rem', flexGrow: 1, overflowY: 'auto', minWidth: 0, wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+          <div style={{ color: '#8b6914', fontSize: '1rem', letterSpacing: '0.4em', marginBottom: '0.5rem' }}>✦ ✦ ✦</div>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.75rem', fontWeight: 700, color: '#1a0a00', marginBottom: '0.25rem', lineHeight: 1.2, paddingRight: '2rem' }}>
+            {book.title}
+          </h2>
+          <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', color: '#5a3e28', fontSize: '1rem', marginBottom: '1.25rem' }}>
+            {book.author}
+          </p>
+          <div style={{ height: '1px', background: 'linear-gradient(to right, #d4af37, transparent)', marginBottom: '1.25rem' }} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem 1.5rem', marginBottom: '1.5rem', fontFamily: "'Lato', sans-serif" }}>
+            {book.year_published && <MetaRow label="Year Published" value={book.year_published} />}
+            {book.edition        && <MetaRow label="Edition"        value={book.edition} />}
+            {book.publisher      && <MetaRow label="Publisher"      value={book.publisher} />}
+            {book.condition && (
+              <div>
+                <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9a7a5a', marginBottom: '0.2rem' }}>Condition</div>
+                <span style={{ display: 'inline-block', padding: '0.2rem 0.6rem', borderRadius: '2px', fontSize: '0.8rem', background: cc.bg, color: cc.text, fontWeight: 700 }}>{book.condition}</span>
+              </div>
+            )}
+            {isAdmin && book.acquisition_date && (
+              <MetaRow label="Acquired" value={new Date(book.acquisition_date).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })} />
+            )}
+            {isAdmin && book.acquisition_price != null && (
+              <MetaRow label="Price Paid" value={Number(book.acquisition_price).toLocaleString('en-US', { style: 'currency', currency: 'USD' })} />
+            )}
+          </div>
+          {book.description && (
+            <>
+              <div style={{ height: '1px', background: 'linear-gradient(to right, #d4af37, transparent)', marginBottom: '1.25rem' }} />
+              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '0.95rem', color: '#5a3e28', fontStyle: 'italic', marginBottom: '0.5rem' }}>Description</h3>
+              <p style={{ fontFamily: "'Lato', sans-serif", fontSize: '0.9rem', lineHeight: 1.7, color: '#3a2810' }}>{book.description}</p>
+            </>
+          )}
+          {isAdmin && book.acquisition_notes && (
+            <>
+              <div style={{ height: '1px', background: 'linear-gradient(to right, #d4af37, transparent)', margin: '1.25rem 0' }} />
+              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '0.95rem', color: '#5a3e28', fontStyle: 'italic', marginBottom: '0.5rem' }}>Acquisition Notes</h3>
+              <p style={{ fontFamily: "'Lato', sans-serif", fontSize: '0.9rem', lineHeight: 1.7, color: '#3a2810' }}>{book.acquisition_notes}</p>
+            </>
+          )}
+          <div style={{ color: '#8b6914', fontSize: '0.9rem', letterSpacing: '0.4em', marginTop: '2rem', textAlign: 'center' }}>✦ ✦ ✦</div>
         </div>
       </div>
     </div>
@@ -281,15 +330,11 @@ function MetaRow({ label, value }) {
 
 function arrowBtn(side) {
   return {
-    position: 'absolute', top: '50%',
-    [side]: '6px',
+    position: 'absolute', top: '50%', [side]: '6px',
     transform: 'translateY(-50%)',
-    background: 'rgba(0,0,0,0.45)',
-    border: 'none', color: '#d4af37',
-    fontSize: '1.8rem', lineHeight: 1,
-    width: '36px', height: '36px',
+    background: 'rgba(0,0,0,0.45)', border: 'none', color: '#d4af37',
+    fontSize: '1.8rem', lineHeight: 1, width: '36px', height: '36px',
     borderRadius: '2px', cursor: 'pointer',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    zIndex: 5,
+    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 5,
   }
 }
