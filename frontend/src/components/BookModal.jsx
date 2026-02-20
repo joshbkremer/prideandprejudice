@@ -102,18 +102,18 @@ export default function BookModal({ book, onClose, isAdmin }) {
             aria-label="Close"
           >×</button>
 
-          {/* Main image — explicit pixel height directly on the element */}
+          {/* Main image — contain shows the full image, no top/bottom cropping */}
           <img
             src={displayUrl}
             alt={activeImage?.caption || book.title}
-            style={{ width: '100%', height: '260px', objectFit: 'cover', display: 'block' }}
+            style={{ width: '100%', height: '360px', objectFit: 'contain', display: 'block' }}
           />
 
           {/* Arrow buttons */}
           {images.length > 1 && (
             <>
-              <button onClick={prev} style={{ ...arrowBtn('left'),  top: '130px' }} aria-label="Previous image">‹</button>
-              <button onClick={next} style={{ ...arrowBtn('right'), top: '130px' }} aria-label="Next image">›</button>
+              <button onClick={prev} style={{ ...arrowBtn('left'),  top: '180px' }} aria-label="Previous image">‹</button>
+              <button onClick={next} style={{ ...arrowBtn('right'), top: '180px' }} aria-label="Next image">›</button>
               <div style={{
                 position: 'absolute', bottom: '6px', left: '50%', transform: 'translateX(-50%)',
                 background: 'rgba(0,0,0,0.55)', color: '#d4af37',
