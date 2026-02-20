@@ -16,7 +16,7 @@ function conditionColor(cond) {
   return map[cond] || { bg: '#f5f5f5', text: '#616161' }
 }
 
-export default function BookModal({ book, onClose }) {
+export default function BookModal({ book, onClose, isAdmin }) {
   const [images, setImages]     = useState([])
   const [activeIdx, setActiveIdx] = useState(0)
   const [mobile, setMobile]     = useState(() => window.innerWidth < 768)
@@ -237,8 +237,11 @@ export default function BookModal({ book, onClose }) {
                 </span>
               </div>
             )}
-            {book.acquisition_date && (
+            {isAdmin && book.acquisition_date && (
               <MetaRow label="Acquired" value={new Date(book.acquisition_date).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })} />
+            )}
+            {isAdmin && book.acquisition_price != null && (
+              <MetaRow label="Price Paid" value={Number(book.acquisition_price).toLocaleString('en-US', { style: 'currency', currency: 'USD' })} />
             )}
           </div>
 
@@ -250,7 +253,7 @@ export default function BookModal({ book, onClose }) {
             </>
           )}
 
-          {book.acquisition_notes && (
+          {isAdmin && book.acquisition_notes && (
             <>
               <div style={{ height: '1px', background: 'linear-gradient(to right, #d4af37, transparent)', margin: '1.25rem 0' }} />
               <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '0.95rem', color: '#5a3e28', fontStyle: 'italic', marginBottom: '0.5rem' }}>Acquisition Notes</h3>

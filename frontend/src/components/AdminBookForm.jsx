@@ -149,7 +149,7 @@ const s = {
 const EMPTY = {
   title: '', author: 'Jane Austen', year_published: '',
   description: '', edition: '', publisher: '',
-  condition: '', acquisition_date: '', acquisition_notes: '',
+  condition: '', acquisition_date: '', acquisition_notes: '', acquisition_price: '',
 }
 
 export default function AdminBookForm({ book, token, onSaved, onCancel }) {
@@ -189,6 +189,7 @@ export default function AdminBookForm({ book, token, onSaved, onCancel }) {
         ...form,
         year_published: form.year_published ? parseInt(form.year_published, 10) : null,
         acquisition_date: form.acquisition_date || null,
+        acquisition_price: form.acquisition_price !== '' ? parseFloat(form.acquisition_price) : null,
         condition: form.condition || null,
         edition: form.edition || null,
         publisher: form.publisher || null,
@@ -338,6 +339,10 @@ export default function AdminBookForm({ book, token, onSaved, onCancel }) {
             <div>
               <label style={s.label}>Acquisition Date</label>
               <input style={s.input} type="date" name="acquisition_date" value={form.acquisition_date} onChange={handleChange} />
+            </div>
+            <div>
+              <label style={s.label}>Acquisition Price</label>
+              <input style={s.input} type="number" step="0.01" min="0" name="acquisition_price" value={form.acquisition_price} onChange={handleChange} placeholder="0.00" />
             </div>
           </div>
 

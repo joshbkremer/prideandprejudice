@@ -61,6 +61,7 @@ class BookIn(BaseModel):
     condition: Optional[str] = None
     acquisition_date: Optional[str] = None
     acquisition_notes: Optional[str] = None
+    acquisition_price: Optional[float] = None
     cover_image_url: Optional[str] = None
 
 
@@ -74,6 +75,7 @@ class BookUpdate(BaseModel):
     condition: Optional[str] = None
     acquisition_date: Optional[str] = None
     acquisition_notes: Optional[str] = None
+    acquisition_price: Optional[float] = None
     cover_image_url: Optional[str] = None
 
 

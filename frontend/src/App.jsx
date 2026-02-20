@@ -39,7 +39,7 @@ export default function App() {
     <BrowserRouter>
       <Navbar session={session} />
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Home session={session} />} />
         <Route path="/admin" element={<Admin session={session} />} />
       </Routes>
     </BrowserRouter>

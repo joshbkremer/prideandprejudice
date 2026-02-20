@@ -29,7 +29,7 @@ const quillDivider = (
   </div>
 )
 
-export default function Home() {
+export default function Home({ session }) {
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -234,7 +234,7 @@ export default function Home() {
         {quillDivider}
       </main>
 
-      {selected && <BookModal book={selected} onClose={() => setSelected(null)} />}
+      {selected && <BookModal book={selected} onClose={() => setSelected(null)} isAdmin={!!session} />}
     </div>
   )
 }

@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS books (
   condition TEXT CHECK (condition IN ('Mint', 'Very Good', 'Good', 'Fair', 'Poor')),
   acquisition_date DATE,
   acquisition_notes TEXT,
+  acquisition_price NUMERIC(10, 2),
   cover_image_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
