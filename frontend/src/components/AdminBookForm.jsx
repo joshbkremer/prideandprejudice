@@ -161,6 +161,8 @@ export default function AdminBookForm({ book, token, onSaved, onCancel }) {
   const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [dragIdx, setDragIdx] = useState(null)
+  const [dragOverIdx, setDragOverIdx] = useState(null)
   const fileInputRef = useRef(null)
 
   // Load existing images when editing
@@ -285,6 +287,47 @@ export default function AdminBookForm({ book, token, onSaved, onCancel }) {
     }
   }
 
+  async function saveOrder(ordered) {
+    try {
+      await fetch(`${API}/books/${book.id}/images/reorder`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ image_ids: ordered.map((img) => img.id) }),
+      })
+    } catch {
+      setError('Failed to save image order')
+    }
+  }
+
+  function handleDragStart(idx) {
+    setDragIdx(idx)
+  }
+
+  function handleDragOver(e, idx) {
+    e.preventDefault()
+    if (idx !== dragOverIdx) setDragOverIdx(idx)
+  }
+
+  function handleDrop(idx) {
+    if (dragIdx === null || dragIdx === idx) {
+      setDragIdx(null)
+      setDragOverIdx(null)
+      return
+    }
+    const reordered = [...images]
+    const [moved] = reordered.splice(dragIdx, 1)
+    reordered.splice(idx, 0, moved)
+    setImages(reordered)
+    setDragIdx(null)
+    setDragOverIdx(null)
+    saveOrder(reordered)
+  }
+
+  function handleDragEnd() {
+    setDragIdx(null)
+    setDragOverIdx(null)
+  }
+
   const isEditing = Boolean(book?.id)
 
   return (
@@ -361,24 +404,52 @@ export default function AdminBookForm({ book, token, onSaved, onCancel }) {
               )}
 
               {!imagesLoading && images.length > 0 && (
-                <div style={s.imageGrid}>
-                  {images.map((img) => (
-                    <div key={img.id} style={s.imageThumb(img.is_primary)}>
-                      {img.is_primary && <span style={s.thumbBadge}>Cover</span>}
-                      <img src={img.url} alt={img.caption || ''} style={s.thumbImg} />
-                      <div style={s.thumbActions}>
-                        {!img.is_primary && (
-                          <button type="button" style={s.btnSmall('gold')} onClick={() => handleSetPrimary(img.id)}>
-                            Set Cover
+                <>
+                  {images.length > 1 && (
+                    <p style={{ fontFamily: "'Lato', sans-serif", fontSize: '0.75rem', color: '#9a7a5a', marginBottom: '0.5rem' }}>
+                      Drag images to reorder them.
+                    </p>
+                  )}
+                  <div style={s.imageGrid}>
+                    {images.map((img, idx) => (
+                      <div
+                        key={img.id}
+                        draggable
+                        onDragStart={() => handleDragStart(idx)}
+                        onDragOver={(e) => handleDragOver(e, idx)}
+                        onDrop={() => handleDrop(idx)}
+                        onDragEnd={handleDragEnd}
+                        style={{
+                          ...s.imageThumb(img.is_primary),
+                          opacity: dragIdx === idx ? 0.4 : 1,
+                          outline: dragOverIdx === idx && dragIdx !== idx ? '2px dashed #d4af37' : 'none',
+                          cursor: 'grab',
+                        }}
+                      >
+                        {/* Drag handle */}
+                        <div style={{
+                          background: 'rgba(0,0,0,0.45)', color: '#d4af37',
+                          fontSize: '0.7rem', textAlign: 'center',
+                          padding: '0.2rem', letterSpacing: '0.15em', userSelect: 'none',
+                        }}>
+                          ⠿
+                        </div>
+                        {img.is_primary && <span style={s.thumbBadge}>Cover</span>}
+                        <img src={img.url} alt={img.caption || ''} style={s.thumbImg} />
+                        <div style={s.thumbActions}>
+                          {!img.is_primary && (
+                            <button type="button" style={s.btnSmall('gold')} onClick={() => handleSetPrimary(img.id)}>
+                              Set Cover
+                            </button>
+                          )}
+                          <button type="button" style={s.btnSmall('danger')} onClick={() => handleDeleteImage(img.id)}>
+                            Remove
                           </button>
-                        )}
-                        <button type="button" style={s.btnSmall('danger')} onClick={() => handleDeleteImage(img.id)}>
-                          Remove
-                        </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </>
               )}
 
               {!imagesLoading && images.length === 0 && (

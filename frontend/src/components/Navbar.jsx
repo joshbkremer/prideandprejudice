@@ -62,7 +62,7 @@ export default function Navbar({ session }) {
   return (
     <nav style={styles.nav}>
       <Link to="/" style={styles.brand}>
-        Pride &amp; Prejudice Collection
+      ❦
       </Link>
       <div style={styles.links}>
         <Link to="/" style={styles.link}>Gallery</Link>

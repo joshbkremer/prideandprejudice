@@ -96,7 +96,19 @@ The app will open at `http://localhost:5173`.
 
 ---
 
-## 5. Project Structure
+## 5. Deployment
+
+```bash
+cd frontend
+netlify deploy --build --prod
+
+cd backend
+fly deploy
+```
+
+---
+
+## 6. Project Structure
 
 ```
 prideandprejudice/

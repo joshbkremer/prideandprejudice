@@ -1,6 +1,6 @@
 import os
 import uuid
-from typing import Optional
+from typing import List, Optional
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Header, Form
@@ -63,6 +63,10 @@ class BookIn(BaseModel):
     acquisition_notes: Optional[str] = None
     acquisition_price: Optional[float] = None
     cover_image_url: Optional[str] = None
+
+
+class ImageReorder(BaseModel):
+    image_ids: List[str]
 
 
 class BookUpdate(BaseModel):
@@ -223,6 +227,14 @@ async def add_book_image(
         supabase.table("books").update({"cover_image_url": public_url}).eq("id", book_id).execute()
 
     return new_image
+
+
+@app.put("/books/{book_id}/images/reorder", status_code=200)
+def reorder_images(book_id: str, body: ImageReorder, _admin=Depends(verify_admin)):
+    """Update the position of every image for a book based on the supplied ordered list of IDs."""
+    for position, image_id in enumerate(body.image_ids):
+        supabase.table("book_images").update({"position": position}).eq("id", image_id).eq("book_id", book_id).execute()
+    return {"ok": True}
 
 
 @app.put("/books/{book_id}/images/{image_id}/primary", status_code=200)

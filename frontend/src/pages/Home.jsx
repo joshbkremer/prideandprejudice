@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import BookCard from '../components/BookCard'
 import BookModal from '../components/BookModal'
 
@@ -33,9 +34,16 @@ export default function Home({ session }) {
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [selected, setSelected] = useState(null)
   const [sortBy, setSortBy]   = useState('year_published')
   const [sortDir, setSortDir] = useState('asc')
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Modal state lives in the URL — ?book=<id> — so the back button closes it
+  const selectedId = searchParams.get('book')
+  const selected   = books.find((b) => b.id === selectedId) ?? null
+
+  function openBook(book)  { setSearchParams({ book: book.id }) }
+  function closeBook()     { setSearchParams({}) }
 
   function handleSortKeyChange(key) {
     const opt = SORT_OPTIONS.find((o) => o.value === key)
@@ -226,7 +234,7 @@ export default function Home({ session }) {
             gap: '1.75rem',
           }}>
             {sorted.map((book) => (
-              <BookCard key={book.id} book={book} onClick={() => setSelected(book)} />
+              <BookCard key={book.id} book={book} onClick={() => openBook(book)} />
             ))}
           </div>
         )}
@@ -234,7 +242,7 @@ export default function Home({ session }) {
         {quillDivider}
       </main>
 
-      {selected && <BookModal book={selected} onClose={() => setSelected(null)} isAdmin={!!session} />}
+      {selected && <BookModal book={selected} onClose={closeBook} isAdmin={!!session} />}
     </div>
   )
 }
