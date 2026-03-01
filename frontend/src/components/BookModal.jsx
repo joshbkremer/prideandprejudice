@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 const API = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
 
@@ -42,6 +42,26 @@ export default function BookModal({ book, onClose, isAdmin }) {
 
   const prev = useCallback(() => setActiveIdx((i) => (i - 1 + images.length) % images.length), [images.length])
   const next = useCallback(() => setActiveIdx((i) => (i + 1) % images.length), [images.length])
+
+  const touchStartX = useRef(null)
+  const touchStartY = useRef(null)
+
+  function handleTouchStart(e) {
+    touchStartX.current = e.touches[0].clientX
+    touchStartY.current = e.touches[0].clientY
+  }
+
+  function handleTouchEnd(e) {
+    if (touchStartX.current === null || images.length < 2) return
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    const dy = e.changedTouches[0].clientY - touchStartY.current
+    // Only treat as a horizontal swipe if wider than tall (avoids fighting scroll)
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+      dx < 0 ? next() : prev()
+    }
+    touchStartX.current = null
+    touchStartY.current = null
+  }
 
   useEffect(() => {
     function onKey(e) {
@@ -88,7 +108,11 @@ export default function BookModal({ book, onClose, isAdmin }) {
         {/* ── Image block ── */}
         {/* Height is set directly on <img> — no nested flex/height:100% chains
             that Chrome Android can misresolve against the fixed viewport height */}
-        <div style={{ position: 'relative', background: '#1a0a00', lineHeight: 0 }}>
+        <div
+          style={{ position: 'relative', background: '#1a0a00', lineHeight: 0 }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
           {/* Close button */}
           <button
             onClick={onClose}
