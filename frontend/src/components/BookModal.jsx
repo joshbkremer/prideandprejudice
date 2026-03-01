@@ -143,7 +143,7 @@ export default function BookModal({ book, onClose, isAdmin }) {
                 background: 'rgba(0,0,0,0.6)', color: '#d4af37',
                 fontFamily: "'Lato', sans-serif", fontSize: '0.75rem', fontWeight: 700,
                 padding: '0.25rem 0.75rem', borderRadius: '999px',
-                whiteSpace: 'nowrap', letterSpacing: '0.05em',
+                whiteSpace: 'nowrap', letterSpacing: '0.05em', lineHeight: 'normal',
               }}>
                 {activeIdx + 1} / {images.length}
               </div>
