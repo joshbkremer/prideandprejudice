@@ -139,10 +139,11 @@ export default function BookModal({ book, onClose, isAdmin }) {
               <button onClick={prev} style={{ ...arrowBtn('left'),  top: '180px' }} aria-label="Previous image">‹</button>
               <button onClick={next} style={{ ...arrowBtn('right'), top: '180px' }} aria-label="Next image">›</button>
               <div style={{
-                position: 'absolute', bottom: '6px', left: '50%', transform: 'translateX(-50%)',
-                background: 'rgba(0,0,0,0.55)', color: '#d4af37',
-                fontFamily: "'Lato', sans-serif", fontSize: '0.7rem',
-                padding: '0.15rem 0.5rem', borderRadius: '10px', letterSpacing: '0.08em',
+                position: 'absolute', bottom: '8px', left: '50%', transform: 'translateX(-50%)',
+                background: 'rgba(0,0,0,0.6)', color: '#d4af37',
+                fontFamily: "'Lato', sans-serif", fontSize: '0.75rem', fontWeight: 700,
+                padding: '0.25rem 0.75rem', borderRadius: '999px',
+                whiteSpace: 'nowrap', letterSpacing: '0.05em',
               }}>
                 {activeIdx + 1} / {images.length}
               </div>
